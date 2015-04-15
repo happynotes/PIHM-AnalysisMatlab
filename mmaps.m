@@ -1,4 +1,4 @@
-function mmaps(data,name,ts,te,mesh_file_and_path, plot,matlab_output, project_name)
+function mmaps(data,name,ts,te,mesh_file_and_path, plot,matlab_output, project_name,append_time_stamps)
 
 if ( nargin<1 )
     fprintf('Draw the maps of var\n');
@@ -41,11 +41,27 @@ view(2);
 if (plot == 1)
     
     if nargin >3
-        title([name,'  ',num2str(ts),'-',num2str(te)]);
-        fname=strcat(matlab_output,name,num2str(ts),'-',num2str(te),'.png');
+        if append_time_stamps == true
+            formatOut = 'yyyy-mm-dd-HH-MM-SS';
+            append = datestr(clock,formatOut);
+            ttl = strcat( [name,'  ',num2str(ts),'-',num2str(te)],' ', append);
+            title(ttl);
+         else
+            title([name,'  ',num2str(ts),'-',num2str(te)]);
+         end
+       
+        %fname=strcat(matlab_output,name,num2str(ts),'-',num2str(te),'.png');
     else
-        title(name);
-        fname=strcat(matlab_output,name,'.png');
+         if append_time_stamps == true
+            formatOut = 'yyyy-mm-dd-HH-MM-SS';
+            append = datestr(clock,formatOut);
+            ttl = strcat( name,' ', append);
+            title(ttl);
+         else
+            title(name);
+         end
+       
+        %fname=strcat(matlab_output,name,'.png');
     end
     
     %print('-dpng',fname);
@@ -53,16 +69,39 @@ end
 if (plot == 2)
     if nargin >3
         %figure('visible','off');
-        title([name,'  ',num2str(ts),'-',num2str(te)]);
-        fname=strcat(matlab_output,'\\',project_name,'_',name,num2str(ts),'-',num2str(te),'.png');
+        
+        if append_time_stamps == true
+            formatOut = 'yyyy-mm-dd-HH-MM-SS';
+            append = datestr(clock,formatOut);
+            ttl = strcat( [name,'  ',num2str(ts),'-',num2str(te)],' ', append);
+            title(ttl);
+            fname = strcat(matlab_output,'\\',project_name,'_',name,num2str(ts),'-',num2str(te),append,'.png');
+        else
+            title([name,'  ',num2str(ts),'-',num2str(te)]);
+            fname=strcat(matlab_output,'\\',project_name,'_',name,num2str(ts),'-',num2str(te),'.png');       
+        end
+        
         %saveas(gcf, fname);
         print('-dpng',fname);
     else
-        %figure('visible','off');
-        title(name);
-        fname=strcat(matlab_output,'\\',project_name,'_',name,'.png');
-        %saveas(gcf, fname);
-        print('-dpng',fname);
+%         %figure('visible','off');
+%         title(name);
+%         fname=strcat(matlab_output,'\\',project_name,'_',name,'.png');
+%         %saveas(gcf, fname);
+%         print('-dpng',fname);
+        
+         if append_time_stamps == true
+            formatOut = 'yyyy-mm-dd-HH-MM-SS';
+            append = datestr(clock,formatOut);
+            ttl = strcat( [name,'  ',num2str(ts),'-',num2str(te)],' ', append);
+            title(ttl);
+            fname = strcat(matlab_output,'\\',project_name,'_',name,num2str(ts),'-',num2str(te),append,'.png');
+        else
+            title([name,'  ',num2str(ts),'-',num2str(te)]);
+            fname=strcat(matlab_output,'\\',project_name,'_',name,num2str(ts),'-',num2str(te),'.png');       
+         end
+         print('-dpng',fname);
+         
     end
 end
 

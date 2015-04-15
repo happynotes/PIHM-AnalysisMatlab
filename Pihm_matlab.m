@@ -4,22 +4,30 @@
 %need a version control here ie v2.2 etc
 %Need to add more warnings and indications of positive results
 
+clear;
+%============================================
 %Important user variables to change
 
 project_name = 'vcat';
-forcing_start_date = 2000;
-forcing_end_date = 2009;
+
+start_date = 2008;
+end_date = 2009;
+
+usgs_gage_filename = '01576500.txt';
 
 append_dat = true;
+append_time_stamps = true;
 show_figures = 1;  %Shows figure
 save_figures = 2;  %Doesnt show figure, just saves to directory
 global_figures = show_figures;
 
+plot_nashsutcliffe_e = 1; %true = 1, false = 0
 %============================================
 %Important USER Folders
 pihm_input_dir = 'D:\\Projects\\PIHM_Matlab_Cleaned\\pihm_inputs';
 pihm_output_dir = 'D:\\Projects\\PIHM_Matlab_Cleaned\\pihm_outputs';
 matlab_output = 'D:\\Projects\\PIHM_Matlab_Cleaned\\matlab_output';
+usgs_input_dir = 'D:\\Projects\\PIHM_Matlab_Cleaned\\usgs_data';
 
 %============================================
 disp('========================================');
@@ -38,9 +46,15 @@ if (~(exist(matlab_output,'dir')))
     disp('Invalid MATLAB Output folder');
     return;
 end
+if (~(exist(usgs_input_dir,'dir')))
+    disp('Invalid USGS Input folder');
+    return;
+end
 
 %============================================
-%Files needed
+
+%============================================
+%Input Files needed
 
 mesh_file = strcat(pihm_input_dir, '\\',project_name,'.mesh');
 att_file = strcat(pihm_input_dir, '\\',project_name,'.att');
@@ -49,6 +63,7 @@ init_file = strcat(pihm_input_dir, '\\',project_name,'.init');
 soil_file = strcat(pihm_input_dir, '\\',project_name,'.soil');
 geol_file = strcat(pihm_input_dir, '\\',project_name,'.geol');
 riv_file = strcat(pihm_input_dir, '\\',project_name,'.riv');
+discharge_cubic_feet_per_sec = strcat(usgs_input_dir, '\\',usgs_gage_filename);
 
 if( append_dat )
     po_is_file = strcat(pihm_output_dir, '\\',project_name,'.is.dat');       %M*N; meters/day
@@ -65,7 +80,17 @@ if( append_dat )
     po_qsub_file = strcat(pihm_output_dir, '\\',project_name,'.fluxsub.dat');
     po_stage_file = strcat(pihm_output_dir, '\\',project_name,'.stage.dat');
     po_rbed_file = strcat(pihm_output_dir, '\\',project_name,'.rbed.dat');
+    po_rivFlx0_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx0.dat');
     po_rivFlx1_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx1.dat');
+    po_rivFlx2_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx2.dat');
+    po_rivFlx3_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx3.dat');
+    po_rivFlx4_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx4.dat');
+    po_rivFlx5_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx5.dat');
+    po_rivFlx6_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx6.dat');
+    po_rivFlx7_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx7.dat');
+    po_rivFlx8_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx8.dat');
+    po_rivFlx9_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx9.dat');
+   
 else
     po_is_file = strcat(pihm_output_dir, '\\',project_name,'.is');       %M*N; meters/day
     po_snow_file = strcat(pihm_output_dir, '\\',project_name,'.snow');   %M*N; meters/day
@@ -81,17 +106,55 @@ else
     po_qsub_file = strcat(pihm_output_dir, '\\',project_name,'.fluxsub');
     po_stage_file = strcat(pihm_output_dir, '\\',project_name,'.stage');
     po_rbed_file = strcat(pihm_output_dir, '\\',project_name,'.rbed');
+    po_rivFlx0_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx0');
     po_rivFlx1_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx1');
-    
+    po_rivFlx2_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx2');
+    po_rivFlx3_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx3');
+    po_rivFlx4_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx4');
+    po_rivFlx5_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx5');
+    po_rivFlx6_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx6');
+    po_rivFlx7_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx7');
+    po_rivFlx8_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx8');
+    po_rivFlx9_file = strcat(pihm_output_dir, '\\',project_name,'.rivFlx9');
+   
+
 end
 
 %============================================
-%Note this is using Lele's new file formats. A modification of PIHM v2.2
-names={'prcp',...   %prcp 1
-    'et0', 'et1', 'et2', 'infil', 'Rech', 'fluxsurf', 'fluxsub', ... %flux 2-8
-    'is', 'snow', 'surf', 'unsat', 'GW', ...    %storage 9-13
-    'fluxriv1', 'fluxriv9'};    %flux of streams;   14-15
 
+list_pihm_output_exts = {'is','snow','surf','unsat','gw','et0','et1','et2','infil','Rech','fluxsurf','fluxsub','stage','rbed','rivFlx0','rivFlx1'...
+    'rivFlx2','rivFlx3','rivFlx4','rivFlx5','rivFlx6','rivFlx7','rivFlx8','rivFlx9'};
+
+list_pihm_outputs = {po_is_file,po_snow_file,po_surf_file,po_unsat_file,po_gw_file,po_et0_file,po_et1_file,po_et2_file,po_infil_file,...
+    po_rech_file,po_qsurf_file,po_qsub_file,po_stage_file,po_rbed_file,po_rivFlx0_file, po_rivFlx1_file,po_rivFlx2_file,po_rivFlx3_file,po_rivFlx4_file,...
+    po_rivFlx5_file,po_rivFlx6_file,po_rivFlx7_file,po_rivFlx8_file,po_rivFlx9_file};
+list_pihm_output_titles = {'Interception Storage [m]',...
+    'Snow accumulation (water equivalent) [m]',...
+    'Surface Water [m]',...
+    'Soil Moisture [m]',...
+    'Groundwater Head [m],'...
+    'Evaporation from Canopy [m/day]',...
+    'Transpiration [m/day]',...
+    'Evaporation from Ground Surface [m/day]',...
+    'Infiltration Rate [m/day]',...
+    'Recharge  Rate [m/day]',...
+    'Discharge Surface [m]',...
+    'Discharge Subsurface [m]',...
+    'River Stage [m],'...
+    'River Bed Storage [m],'...
+    'Lateral influx to the stream reach [m/day],'...
+    'Lateral outflow  to the stream reach [m/day],'...
+    'Surface flow to stream reach from Left terrain [m/day],'...
+    'Surface flow to stream reach from right terrain [m/day],'...
+    'Baseflow to stream reach from aquifer on the left [m/day],'...
+    'Baseflow to stream reach from aquifer on the right [m/day],'...
+    'Leakage between stream reach and river bed [m/day],'...
+    'Subsurface flow to the river bed from left aquifer [m/day],'...
+    'Subsurface flow to the river bed from right aquifer [m/day],'... 
+    'Lateral outflux to the bed beneath river [m/day],'};
+%     'Lateral influx to the bed beneath river [m/day]'};
+
+  
 disp('Reading PIHM mesh file');
 
 %Are the units correct?
@@ -220,15 +283,15 @@ if global_figures == 1
     
     title('P-Q-ET of each grid');
     figure(1)
-    mmaps(idstg,'Delta S',ts,te, mesh_file, global_figures, matlab_output,project_name);
+    mmaps(idstg,'Delta S',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
     figure(2)
-    mmaps(idpq,'P-Q-ET',ts,te, mesh_file, global_figures, matlab_output,project_name);
+    mmaps(idpq,'P-Q-ET',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
     figure(3)
-    mmaps(iqsurf,'Q surf accumulated',ts,te, mesh_file, global_figures, matlab_output,project_name);
+    mmaps(iqsurf,'Q surf accumulated',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
     figure(4)
-    mmaps(iqsub,'Q_gw',ts,te, mesh_file, global_figures, matlab_output,project_name);
+    mmaps(iqsub,'Q_gw',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
     figure(5)
-    mmaps(sum(RECH(ts:te,2:N+1))/area,'Recharge',ts,te, mesh_file,global_figures,  matlab_output,project_name);
+    mmaps(sum(RECH(ts:te,2:N+1))/area,'Recharge',ts,te, mesh_file,global_figures,  matlab_output,project_name,append_time_stamps);
 elseif global_figures == 2
     subplot(2,1,1);
     idstg=(iis+isnow+isurf+iunsat+igw);%./iarea;
@@ -240,11 +303,11 @@ elseif global_figures == 2
     fname = strcat(matlab_output,'\\',project_name,'_StorageByCell.png');
     print('-dpng',fname);
     
-    mmaps(idstg,'Delta S',ts,te, mesh_file, global_figures, matlab_output,project_name);
-    mmaps(idpq,'P-Q-ET',ts,te, mesh_file, global_figures, matlab_output,project_name);
-    mmaps(iqsurf,'Q surf accumulated',ts,te, mesh_file, global_figures, matlab_output,project_name);
-    mmaps(iqsub,'Q_gw',ts,te, mesh_file, global_figures, matlab_output,project_name);
-    mmaps(sum(RECH(ts:te,2:N+1))/area,'Recharge',ts,te, mesh_file,global_figures,  matlab_output,project_name);
+    mmaps(idstg,'Delta S',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
+    mmaps(idpq,'P-Q-ET',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
+    mmaps(iqsurf,'Q surf accumulated',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
+    mmaps(iqsub,'Q_gw',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
+    mmaps(sum(RECH(ts:te,2:N+1))/area,'Recharge',ts,te, mesh_file,global_figures,  matlab_output,project_name,append_time_stamps);
 end
 
 %============================================
@@ -290,29 +353,39 @@ if global_figures == 1
     hf=figure;
     clf();
     %http://www.mathworks.com/help/matlab/ref/plotyy.html
-    [ax, h1, h2] = plotyy([1:floor(t(end))],[prcp],t,Qv2,'bar','line');%,'Linewidth','10');
-    
+    [ax, h1, h2] = plotyy((1:floor(t(end))),prcp,t,Qv2,'bar','line');%,'Linewidth','10');
+    %    [ax, h1, h2] = plotyy([1:t(end)],[Qv2],t,prcp,'line','line');%,'Linewidth','10');
     xlabel(ax(1), 'Time (days) ');
     ylabel(ax(1), 'Precipitation (m/day) ');
     set(ax(1), 'Ydir', 'reverse');
     set(ax(1),'YAxisLocation','right')
     set(h1,'EdgeColor',[0,0,1],'FaceColor',[0,0,1]);
     set(ax(1),'ylim',[0,max([prcp;0.5])]*1.5);
+    %    set(ax(1),'ylim',[0,max(prcp)]*0.5);
+    %set(ax(1),'ylim',[0,max([prcp;0.5])]*10.5);
+    %     set(ax(1),'ylim',[0,max([prcp;0.5])]);
     
     y=ylabel(ax(2), 'Q/Discharge (m/day)');
     set(ax(2),'YAxisLocation','left')
     set(h2, 'LineWidth', 1)
+    set(ax(2),'ylim',[0,max(max(Qv2))*1.5]);
     
     ttl='Precipitation vs Discharge';
+    if append_time_stamps == true
+        formatOut = 'yyyy-mm-dd-HH-MM-SS';
+        append = datestr(clock,formatOut);
+        ttl = strcat( 'Precipitation vs Discharge ', append); 
+    end
+    
     title(ttl);
-    fname = strcat(matlab_output,'\\',project_name,'_Flow.png');
+    %fname = strcat(matlab_output,'\\',project_name,'_Flow.png');
     %print('-dpng',fname);
     
 elseif global_figures == 2
     
     hf=figure;
     clf();
-    [ax, h1, h2] = plotyy([1:floor(t(end))],[prcp],t,Qv2,'bar','line');%,'Linewidth','10');
+    [ax, h1, h2] = plotyy([1:floor(t(end))],prcp,t,Qv2,'bar','line');%,'Linewidth','10');
     
     xlabel(ax(1), 'Time (days) ');
     ylabel(ax(1), 'Precipitation (m/day) ');
@@ -326,12 +399,21 @@ elseif global_figures == 2
     set(h2, 'LineWidth', 1)
     
     ttl='Precipitation vs Discharge';
-    title(ttl);
     fname = strcat(matlab_output,'\\',project_name,'_Flow.png');
+     
+    if append_time_stamps == true
+        formatOut = 'yyyy-mm-dd-HH-MM-SS';
+        append = datestr(clock,formatOut);
+        ttl = stcat( 'Precipitation vs Discharge ', append); 
+        fname = strcat(matlab_output,'\\',project_name,'_Flow_',append,'.png');
+    end
+    
+    title(ttl);
+   
     print('-dpng',fname);
 end
 
-%============================================   
+%============================================
 %from go file end
 
 [riv,~,shp,material]=read_riv(riv_file);
@@ -349,12 +431,37 @@ irbedV=sum(irbed.*ira);
 
 %============================================
 %Write file to text file
-fid=fopen(strcat(matlab_output,'\\',project_name,'_iWaterbalance_',num2str(ts),'-',num2str(te),'.txt'),'w');
+%my_wb_file_name = strcat(matlab_output,'\\',project_name,'_iWaterbalance_',num2str(ts),'-',num2str(te),'.txt');
+my_wb_file_name = strcat(matlab_output,'\\',project_name,'_iWaterbalance_',append,'.txt');
+if append_time_stamps == true
+    formatOut = 'yyyy-mm-dd-HH-MM-SS';
+    append = datestr(clock,formatOut);
+    my_wb_file_name = strcat(matlab_output,'\\',project_name,'_iWaterbalance_',append,'.txt');
+end
+
+fid=fopen(my_wb_file_name,'w');
 fprintf(fid,'Water Balance from %d, to %d\n\n',ts,te);
 fprintf(fid,'\nBalance based on each grids.\n');
+IDS=(sum((iis+isnow+isurf+iunsat+igw).*iarea))/area;
+TP=sum(sum(ipm).*iarea)/area;      %m
+ITQ=sum((iqsurf+iqsub)./iarea);  %m3 to m;
+ITE0=sum(iet0.*iarea)/area;
+ITE1=sum(iet1.*iarea)/area;
+ITE2=sum(iet2.*iarea)/area;
+ITE=ITE0+ITE1+ITE2;
+
+fprintf(fid,'DS=(sum((iis+isnow+isurf+iunsat+igw).*iarea)?/area\n');
+fprintf(fid,'DS=%f\n',IDS);
+fprintf(fid,'P=%f\n',TP);
+fprintf(fid,'Q=%f\t \t %f\n',ITQ,ITQ/TP);
+fprintf(fid,'ET=%f\t \t %f \n',ITE,ITE/TP);
+fprintf(fid,'ET0=%f(%.3f)\tET1=%f(%.3f)\tET2=%f(%.3f)\n',ITE0,ITE0/TP,ITE1,ITE1/TP,ITE2,ITE2/TP);
+fprintf(fid,'P-Q-ET=%f\n',TP-ITQ-ITE);
+fprintf(fid,'Whole watershed with Rivers\n\n');
+
+fprintf(fid,'***************************************************************************************.\n');
 fprintf(fid,'\nBalance of whole watershed\n');
 DS=(sum((iis+isnow+isurf+iunsat+igw).*iarea)+ istageV +irbedV)/area;
-
 fprintf(fid,'DS=(sum((iis+isnow+isurf+iunsat+igw).*iarea)+ istageV +irbedV)/area\n');
 fprintf(fid,'DS=%f\n',DS);
 fprintf(fid,'P=%f\n',TP);
@@ -365,5 +472,163 @@ fprintf(fid,'P-Q-ET=%f\n',TP-TQ-TE);
 
 fclose(fid);
 %============================================
+A = size(list_pihm_output_titles);
+len = A(2);
+for n = 1:len
+    clear title;
+    clear variable_input_filename_path;
+    clear precipitation_input_filename_path;
+    clear ext;
+    clear output_filename_path;
+
+    
+    title = cell2mat(list_pihm_output_titles(n));
+    variable_input_filename_path = cell2mat(list_pihm_outputs(n));
+    precipitation_input_filename_path = forc_file;
+    ext = cell2mat(list_pihm_output_exts(n));
+    output_filename_path = strcat(matlab_output, '\\',project_name,'_model_',ext,'.png');
+         
+    if append_time_stamps == true
+        formatOut = 'yyyy-mm-dd-HH-MM-SS';
+        append = datestr(clock,formatOut);
+        title = strcat(title,' ', append);
+        output_filename_path = strcat(matlab_output, '\\',project_name,'_model_',append,'_', ext,'.png');
+    end
+    
+    plot_pihm_variables(variable_input_filename_path, precipitation_input_filename_path,output_filename_path,title);
+end
+
+
+%============================================
+if exist(discharge_cubic_feet_per_sec, 'file')
+    %Load USGS observed data, NOTE DATA MUST BE DAILY
+    fileID = fopen(discharge_cubic_feet_per_sec,'r');
+    formatSpec = '%*s %*s %*s %d %*s';
+    allflow = fscanf(fileID,formatSpec);
+    fclose(fileID);
+    
+    Q=Qsubwatershed/area;
+    
+    ufactor=24*3600*.348^3;
+    obs = allflow(t,1)*ufactor/area;   %convert to m/day from cms;
+    
+    %http://en.wikipedia.org/wiki/Nash%E2%80%93Sutcliffe_model_efficiency_coefficient
+    %GOAL IS 1
+    [NSE,id,MatchedData]=nashsutcliffe([t,obs],[t,Q]);
+    
+    %============================================
+    hf=figure;
+    clf();
+    % vl=yline(yline<t(end));
+    % if ~isempty(vl)
+    %     for i=1:length(vl)
+    %         line([vl(i),vl(i)],[0,1],'LineWidth',4,'Color',[.8 .8 .8]);hold on;
+    %     end
+    % end
+    
+    if ( plot_nashsutcliffe_e)
+        subplot(4,1,[1,3]);
+        [ax, h1, h2] = plotyy([1:t(end)],[Q,obs],t,prcp,'line','bar');%,'Linewidth','10');
+        xlabel(ax(2), 'Time (days) ');
+        ylabel(ax(2), 'Precipitation (m/day) ');
+        set(ax(2), 'Ydir', 'reverse');
+        set(ax(2),'YAxisLocation','right')
+        set(h2,'FaceColor',[0.5,0.5,0.5],'EdgeColor',[0,0,1]);
+        ymax=ceil(max(prcp)*1.5*10)/10;
+        set(ax(2),'ylim',[0,ymax]);
+        set(ax(2),'ytick',0:ymax/5:ymax);
+        
+        ymax=ceil(max(max(Q),max(obs))*1.1*100)/100;
+        set(ax(1),'YAxisLocation','left')
+        set(ax(1),'ylim',[0,ymax]);
+        set(ax(1),'ytick',0:ymax/5:ymax);
+        ylabel(ax(1), 'Q/Discharge (m/day)');
+        set(h1(1),'Color', 'r');    %Simulation
+        set(h1(2),'Color', 'b');    %Observation
+        annotation('textbox', [0.1, 0.40, 0, 0], 'string', start_date);
+        annotation('textbox', [0.9, 0.40, 0, 0], 'string', end_date);
+        nse_title = strcat('NSE =  ',num2str(NSE));
+        annotation('textbox', [0.75, 0.40, 0, 0], 'string', nse_title);
+        clear title local_ttl
+        local_ttl='Precipitation vs Discharge';
+        
+        %Output Files
+        usgs_vs_model_output = strcat(matlab_output, '\\',project_name,'_model_vs_usgs_discharge.png');
+        
+        if append_time_stamps == true
+            formatOut = 'yyyy-mm-dd-HH-MM-SS';
+            append = datestr(clock,formatOut);
+            local_ttl = strcat(local_ttl,' ', append);
+            usgs_vs_model_output = strcat(matlab_output, '\\',project_name,'_model_vs_usgs_discharge',append,'.png');
+        end
+        
+        title(local_ttl);
+        
+        leg=legend([h2,h1(1),h1(2)],'Precipitation','Simulation','Observation','location','southoutside');
+        set(leg,'FontSize',10);
+        
+        subplot(4,1,4);
+        plot(t,MatchedData(:,2) - MatchedData(:,3),'color','r');
+        local_ttl='Nashsutcliffe-E';
+        annotation('textbox', [0.45, 0.05, 0.0, 0.0], 'string', local_ttl);
+        
+        % hold on;
+        % plot(t,MatchedData(:,3),'color','b');
+        if( global_figures == 2 )
+            print('-dpng',usgs_vs_model_output);
+        end
+        
+        hold off;
+    else
+        [ax, h1, h2] = plotyy([1:t(end)],[Q,obs],t,prcp,'line','bar');%,'Linewidth','10');
+        xlabel(ax(2), 'Time (days) ');
+        ylabel(ax(2), 'Precipitation (m/day) ');
+        set(ax(2), 'Ydir', 'reverse');
+        set(ax(2),'YAxisLocation','right')
+        set(h2,'FaceColor',[0.5,0.5,0.5],'EdgeColor',[0,0,1]);
+        ymax=ceil(max(prcp)*1.5*10)/10;
+        set(ax(2),'ylim',[0,ymax]);
+        set(ax(2),'ytick',0:ymax/5:ymax);
+        
+        ymax=ceil(max(max(Q),max(obs))*1.1*100)/100;
+        set(ax(1),'YAxisLocation','left')
+        set(ax(1),'ylim',[0,ymax]);
+        set(ax(1),'ytick',0:ymax/5:ymax);
+        ylabel(ax(1), 'Q/Discharge (m/day)');
+        set(h1(1),'Color', 'r');    %Simulation
+        set(h1(2),'Color', 'b');    %Observation
+        annotation('textbox', [0.1, 0.20, 0, 0], 'string', start_date);
+        annotation('textbox', [0.9, 0.20, 0, 0], 'string', end_date);
+        nse_title = strcat('NSE =  ',num2str(NSE));
+        annotation('textbox', [0.75, 0.20, 0, 0], 'string', nse_title);
+        clear title local_ttl
+        local_ttl='Precipitation vs Discharge';
+        
+        usgs_vs_model_output = strcat(matlab_output, '\\',project_name,'_model_vs_usgs_discharge.png');
+        
+        if append_time_stamps == true
+            formatOut = 'yyyy-mm-dd-HH-MM-SS';
+            append = datestr(clock,formatOut);
+            local_ttl = strcat(local_ttl,' ', append);
+            usgs_vs_model_output = strcat(matlab_output, '\\',project_name,'_model_vs_usgs_discharge',append,'.png');
+        end
+        
+        title(local_ttl);
+        leg=legend([h2,h1(1),h1(2)],'Precipitation','Simulation','Observation','location','southoutside');
+        set(leg,'FontSize',10);
+        
+        if( global_figures == 2 )
+            print('-dpng',usgs_vs_model_output);
+        end
+        
+        hold off;
+    end
+    
+    
+    fprintf('NSE=\t%g\n\n\n',NSE);
+    
+end
+%============================================
+
 
 disp('Done...');
