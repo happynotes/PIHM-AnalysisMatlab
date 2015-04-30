@@ -24,10 +24,11 @@ global_figures = show_figures;
 plot_nashsutcliffe_e = 1; %true = 1, false = 0
 %============================================
 %Important USER Folders
-pihm_input_dir = 'D:\\Projects\\PIHM_Matlab_Cleaned\\pihm_inputs';
-pihm_output_dir = 'D:\\Projects\\PIHM_Matlab_Cleaned\\pihm_outputs';
-matlab_output = 'D:\\Projects\\PIHM_Matlab_Cleaned\\matlab_output';
-usgs_input_dir = 'D:\\Projects\\PIHM_Matlab_Cleaned\\usgs_data';
+definedir='D:\\Projects\\PIHM_Matlab_Cleaned\\';
+pihm_input_dir = strcat(definedir,'pihm_inputs');
+pihm_output_dir = strcat(definedir,'pihm_outputs');
+matlab_output = strcat(definedir,'matlab_output');
+usgs_input_dir = strcat(definedir,'usgs_data');
 
 %============================================
 disp('========================================');
