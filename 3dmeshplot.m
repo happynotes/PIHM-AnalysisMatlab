@@ -1,5 +1,6 @@
 %This is the code for 3d view of the PIHM mesh 
-filename=importdata('projectName.txt');
+definedir='D:\\Projects\\PIHM_Matlab_Cleaned\\';%this the directory of the PIHM input file. the program requires the data from .mesh. 
+filename=importdata(strcat(definedir,'projectName.txt'));
 readname=strcat(filename,'.mesh');
 fid = importdata(readname{1});
 
