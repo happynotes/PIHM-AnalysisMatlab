@@ -24,11 +24,22 @@ global_figures = show_figures;
 plot_nashsutcliffe_e = 1; %true = 1, false = 0
 %============================================
 %Important USER Folders
-definedir='D:\\Projects\\PIHM_Matlab_Cleaned\\';
-pihm_input_dir = strcat(definedir,'pihm_inputs');
-pihm_output_dir = strcat(definedir,'pihm_outputs');
-matlab_output = strcat(definedir,'matlab_output');
-usgs_input_dir = strcat(definedir,'usgs_data');
+input_output_same_location = true;
+defined_input_and_output_dir='D:\\Projects\\PIHM_Matlab_Cleaned\\';
+defined_input_dir='D:\\Projects\\PIHM_Matlab_Cleaned\\Input';
+defined_output_dir='D:\\Projects\\PIHM_Matlab_Cleaned\\Output';
+
+if( input_output_same_location )
+    pihm_input_dir = strcat(defined_input_and_output_dir,'pihm_inputs');
+    pihm_output_dir = strcat(defined_input_and_output_dir,'pihm_outputs');
+    matlab_output = strcat(defined_input_and_output_dir,'matlab_output');
+    usgs_input_dir = strcat(defined_input_and_output_dir,'usgs_data');
+else
+    pihm_input_dir = strcat(defined_input_dir,'pihm_inputs');
+    pihm_output_dir = strcat(defined_output_dir,'pihm_outputs');
+    matlab_output = strcat(defined_output_dir,'matlab_output');
+    usgs_input_dir = strcat(defined_input_dir,'usgs_data');    
+end
 
 %============================================
 disp('========================================');
