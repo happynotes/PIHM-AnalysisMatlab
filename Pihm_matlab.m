@@ -64,6 +64,11 @@ if (~(exist(usgs_input_dir,'dir')))
 end
 
 %============================================
+%Suppresss figures
+if(global_figures == 2)
+    set(0,'DefaultFigureVisible','off');
+end
+%============================================
 
 %============================================
 %Input Files needed
@@ -641,6 +646,12 @@ if exist(discharge_cubic_feet_per_sec, 'file')
     
 end
 %============================================
+%============================================
+set(0,'DefaultFigureVisible','on');
 
+%============================================
+%DOES NOT WORK
+%plot_3dmesh(mesh_file)
+%============================================
 
 disp('Done...');
