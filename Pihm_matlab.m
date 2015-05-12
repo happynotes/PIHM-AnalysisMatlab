@@ -584,134 +584,134 @@ end
 
 
 %============================================
-if length(usgs_gage_filename) > 0 
-%if exist(discharge_cubic_feet_per_sec, 'file')
-    %Load USGS observed data, NOTE DATA MUST BE DAILY
-    fileID = fopen(discharge_cubic_feet_per_sec,'r');
-    formatSpec = '%*s %*s %*s %d %*s';
-    allflow = fscanf(fileID,formatSpec);
-    fclose(fileID);
-    
-    Q=Qsubwatershed/area;
-    
-    ufactor=24*3600*.348^3;
-    obs = allflow(t,1)*ufactor/area;   %convert to m/day from cms;
-    
-    %http://en.wikipedia.org/wiki/Nash%E2%80%93Sutcliffe_model_efficiency_coefficient
-    %GOAL IS 1
-    [NSE,id,MatchedData]=nashsutcliffe([t,obs],[t,Q]);
-    
-    %============================================
-    hf=figure;
-    clf();
-    % vl=yline(yline<t(end));
-    % if ~isempty(vl)
-    %     for i=1:length(vl)
-    %         line([vl(i),vl(i)],[0,1],'LineWidth',4,'Color',[.8 .8 .8]);hold on;
-    %     end
-    % end
-    
-    if ( plot_nashsutcliffe_e)
-        subplot(4,1,[1,3]);
-        [ax, h1, h2] = plotyy([1:t(end)],[Q,obs],t,prcp,'line','bar');%,'Linewidth','10');
-        xlabel(ax(2), 'Time (days) ');
-        ylabel(ax(2), 'Precipitation (m/day) ');
-        set(ax(2), 'Ydir', 'reverse');
-        set(ax(2),'YAxisLocation','right')
-        set(h2,'FaceColor',[0.5,0.5,0.5],'EdgeColor',[0,0,1]);
-        ymax=ceil(max(prcp)*1.5*10)/10;
-        set(ax(2),'ylim',[0,ymax]);
-        set(ax(2),'ytick',0:ymax/5:ymax);
+if ~isempty(usgs_gage_filename)
+    if exist(discharge_cubic_feet_per_sec, 'file')
+        %Load USGS observed data, NOTE DATA MUST BE DAILY
+        fileID = fopen(discharge_cubic_feet_per_sec,'r');
+        formatSpec = '%*s %*s %*s %d %*s';
+        allflow = fscanf(fileID,formatSpec);
+        fclose(fileID);
         
-        ymax=ceil(max(max(Q),max(obs))*1.1*100)/100;
-        set(ax(1),'YAxisLocation','left')
-        set(ax(1),'ylim',[0,ymax]);
-        set(ax(1),'ytick',0:ymax/5:ymax);
-        ylabel(ax(1), 'Q/Discharge (m/day)');
-        set(h1(1),'Color', 'r');    %Simulation
-        set(h1(2),'Color', 'b');    %Observation
-        annotation('textbox', [0.1, 0.40, 0, 0], 'string', start_date);
-        annotation('textbox', [0.9, 0.40, 0, 0], 'string', end_date);
-        nse_title = strcat('NSE =  ',num2str(NSE));
-        annotation('textbox', [0.75, 0.40, 0, 0], 'string', nse_title);
-        clear title local_ttl
-        local_ttl='Precipitation vs Discharge';
+        Q=Qsubwatershed/area;
         
-        %Output Files
-        usgs_vs_model_output = strcat(matlab_output, '\\',project_name,'_model_vs_usgs_discharge.png');
+        ufactor=24*3600*.348^3;
+        obs = allflow(t,1)*ufactor/area;   %convert to m/day from cms;
         
-        if append_time_stamps == true
-            formatOut = 'yyyy-mm-dd-HH-MM-SS';
-            append = datestr(clock,formatOut);
-            local_ttl = strcat(local_ttl,' ', append);
-            usgs_vs_model_output = strcat(matlab_output, '\\',project_name,'_model_vs_usgs_discharge',append,'.png');
+        %http://en.wikipedia.org/wiki/Nash%E2%80%93Sutcliffe_model_efficiency_coefficient
+        %GOAL IS 1
+        [NSE,id,MatchedData]=nashsutcliffe([t,obs],[t,Q]);
+        
+        %============================================
+        hf=figure;
+        clf();
+        % vl=yline(yline<t(end));
+        % if ~isempty(vl)
+        %     for i=1:length(vl)
+        %         line([vl(i),vl(i)],[0,1],'LineWidth',4,'Color',[.8 .8 .8]);hold on;
+        %     end
+        % end
+        
+        if ( plot_nashsutcliffe_e)
+            subplot(4,1,[1,3]);
+            [ax, h1, h2] = plotyy([1:t(end)],[Q,obs],t,prcp,'line','bar');%,'Linewidth','10');
+            xlabel(ax(2), 'Time (days) ');
+            ylabel(ax(2), 'Precipitation (m/day) ');
+            set(ax(2), 'Ydir', 'reverse');
+            set(ax(2),'YAxisLocation','right')
+            set(h2,'FaceColor',[0.5,0.5,0.5],'EdgeColor',[0,0,1]);
+            ymax=ceil(max(prcp)*1.5*10)/10;
+            set(ax(2),'ylim',[0,ymax]);
+            set(ax(2),'ytick',0:ymax/5:ymax);
+            
+            ymax=ceil(max(max(Q),max(obs))*1.1*100)/100;
+            set(ax(1),'YAxisLocation','left')
+            set(ax(1),'ylim',[0,ymax]);
+            set(ax(1),'ytick',0:ymax/5:ymax);
+            ylabel(ax(1), 'Q/Discharge (m/day)');
+            set(h1(1),'Color', 'r');    %Simulation
+            set(h1(2),'Color', 'b');    %Observation
+            annotation('textbox', [0.1, 0.40, 0, 0], 'string', start_date);
+            annotation('textbox', [0.9, 0.40, 0, 0], 'string', end_date);
+            nse_title = strcat('NSE =  ',num2str(NSE));
+            annotation('textbox', [0.75, 0.40, 0, 0], 'string', nse_title);
+            clear title local_ttl
+            local_ttl='Precipitation vs Discharge';
+            
+            %Output Files
+            usgs_vs_model_output = strcat(matlab_output, '\\',project_name,'_model_vs_usgs_discharge.png');
+            
+            if append_time_stamps == true
+                formatOut = 'yyyy-mm-dd-HH-MM-SS';
+                append = datestr(clock,formatOut);
+                local_ttl = strcat(local_ttl,' ', append);
+                usgs_vs_model_output = strcat(matlab_output, '\\',project_name,'_model_vs_usgs_discharge',append,'.png');
+            end
+            
+            title(local_ttl);
+            
+            leg=legend([h2,h1(1),h1(2)],'Precipitation','Simulation','Observation','location','southoutside');
+            set(leg,'FontSize',10);
+            
+            subplot(4,1,4);
+            plot(t,MatchedData(:,2) - MatchedData(:,3),'color','r');
+            local_ttl='Nashsutcliffe-E';
+            annotation('textbox', [0.45, 0.05, 0.0, 0.0], 'string', local_ttl);
+            
+            % hold on;
+            % plot(t,MatchedData(:,3),'color','b');
+            if( global_figures == 2 )
+                print('-dpng',usgs_vs_model_output);
+            end
+            
+            hold off;
+        else
+            [ax, h1, h2] = plotyy([1:t(end)],[Q,obs],t,prcp,'line','bar');%,'Linewidth','10');
+            xlabel(ax(2), 'Time (days) ');
+            ylabel(ax(2), 'Precipitation (m/day) ');
+            set(ax(2), 'Ydir', 'reverse');
+            set(ax(2),'YAxisLocation','right')
+            set(h2,'FaceColor',[0.5,0.5,0.5],'EdgeColor',[0,0,1]);
+            ymax=ceil(max(prcp)*1.5*10)/10;
+            set(ax(2),'ylim',[0,ymax]);
+            set(ax(2),'ytick',0:ymax/5:ymax);
+            
+            ymax=ceil(max(max(Q),max(obs))*1.1*100)/100;
+            set(ax(1),'YAxisLocation','left')
+            set(ax(1),'ylim',[0,ymax]);
+            set(ax(1),'ytick',0:ymax/5:ymax);
+            ylabel(ax(1), 'Q/Discharge (m/day)');
+            set(h1(1),'Color', 'r');    %Simulation
+            set(h1(2),'Color', 'b');    %Observation
+            annotation('textbox', [0.1, 0.20, 0, 0], 'string', start_date);
+            annotation('textbox', [0.9, 0.20, 0, 0], 'string', end_date);
+            nse_title = strcat('NSE =  ',num2str(NSE));
+            annotation('textbox', [0.75, 0.20, 0, 0], 'string', nse_title);
+            clear title local_ttl
+            local_ttl='Precipitation vs Discharge';
+            
+            usgs_vs_model_output = strcat(matlab_output, '\\',project_name,'_model_vs_usgs_discharge.png');
+            
+            if append_time_stamps == true
+                formatOut = 'yyyy-mm-dd-HH-MM-SS';
+                append = datestr(clock,formatOut);
+                local_ttl = strcat(local_ttl,' ', append);
+                usgs_vs_model_output = strcat(matlab_output, '\\',project_name,'_model_vs_usgs_discharge',append,'.png');
+            end
+            
+            title(local_ttl);
+            leg=legend([h2,h1(1),h1(2)],'Precipitation','Simulation','Observation','location','southoutside');
+            set(leg,'FontSize',10);
+            
+            if( global_figures == 2 )
+                print('-dpng',usgs_vs_model_output);
+            end
+            
+            hold off;
         end
         
-        title(local_ttl);
         
-        leg=legend([h2,h1(1),h1(2)],'Precipitation','Simulation','Observation','location','southoutside');
-        set(leg,'FontSize',10);
-        
-        subplot(4,1,4);
-        plot(t,MatchedData(:,2) - MatchedData(:,3),'color','r');
-        local_ttl='Nashsutcliffe-E';
-        annotation('textbox', [0.45, 0.05, 0.0, 0.0], 'string', local_ttl);
-        
-        % hold on;
-        % plot(t,MatchedData(:,3),'color','b');
-        if( global_figures == 2 )
-            print('-dpng',usgs_vs_model_output);
-        end
-        
-        hold off;
-    else
-        [ax, h1, h2] = plotyy([1:t(end)],[Q,obs],t,prcp,'line','bar');%,'Linewidth','10');
-        xlabel(ax(2), 'Time (days) ');
-        ylabel(ax(2), 'Precipitation (m/day) ');
-        set(ax(2), 'Ydir', 'reverse');
-        set(ax(2),'YAxisLocation','right')
-        set(h2,'FaceColor',[0.5,0.5,0.5],'EdgeColor',[0,0,1]);
-        ymax=ceil(max(prcp)*1.5*10)/10;
-        set(ax(2),'ylim',[0,ymax]);
-        set(ax(2),'ytick',0:ymax/5:ymax);
-        
-        ymax=ceil(max(max(Q),max(obs))*1.1*100)/100;
-        set(ax(1),'YAxisLocation','left')
-        set(ax(1),'ylim',[0,ymax]);
-        set(ax(1),'ytick',0:ymax/5:ymax);
-        ylabel(ax(1), 'Q/Discharge (m/day)');
-        set(h1(1),'Color', 'r');    %Simulation
-        set(h1(2),'Color', 'b');    %Observation
-        annotation('textbox', [0.1, 0.20, 0, 0], 'string', start_date);
-        annotation('textbox', [0.9, 0.20, 0, 0], 'string', end_date);
-        nse_title = strcat('NSE =  ',num2str(NSE));
-        annotation('textbox', [0.75, 0.20, 0, 0], 'string', nse_title);
-        clear title local_ttl
-        local_ttl='Precipitation vs Discharge';
-        
-        usgs_vs_model_output = strcat(matlab_output, '\\',project_name,'_model_vs_usgs_discharge.png');
-        
-        if append_time_stamps == true
-            formatOut = 'yyyy-mm-dd-HH-MM-SS';
-            append = datestr(clock,formatOut);
-            local_ttl = strcat(local_ttl,' ', append);
-            usgs_vs_model_output = strcat(matlab_output, '\\',project_name,'_model_vs_usgs_discharge',append,'.png');
-        end
-        
-        title(local_ttl);
-        leg=legend([h2,h1(1),h1(2)],'Precipitation','Simulation','Observation','location','southoutside');
-        set(leg,'FontSize',10);
-        
-        if( global_figures == 2 )
-            print('-dpng',usgs_vs_model_output);
-        end
-        
-        hold off;
+        fprintf('NSE=\t%g\n\n\n',NSE);
     end
-    
-    
-    fprintf('NSE=\t%g\n\n\n',NSE);
-    
 end
 %============================================
 %============================================
