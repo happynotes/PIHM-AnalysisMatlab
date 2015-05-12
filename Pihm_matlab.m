@@ -433,6 +433,8 @@ end
 %============================================
 %from go file end
 
+[msh,pt] = read_mesh(mesh_file);
+
 [riv,~,shp,material]=read_riv(riv_file);
 shpid=riv(:,7)';
 ira=zeros(1,size(riv,1));
@@ -477,15 +479,80 @@ fprintf(fid,'P-Q-ET=%f\n',TP-ITQ-ITE);
 fprintf(fid,'Whole watershed with Rivers\n\n');
 
 fprintf(fid,'***************************************************************************************.\n');
+
 fprintf(fid,'\nBalance of whole watershed\n');
-DS=(sum((iis+isnow+isurf+iunsat+igw).*iarea)+ istageV +irbedV)/area;
-fprintf(fid,'DS=(sum((iis+isnow+isurf+iunsat+igw).*iarea)+ istageV +irbedV)/area\n');
-fprintf(fid,'DS=%f\n',DS);
-fprintf(fid,'P=%f\n',TP);
-fprintf(fid,'Q=%f\t \tQ/P= %f\n',TQ,TQ/TP);
-fprintf(fid,'ET=%f\t \tET/P= %f\n',TE,TE/TP);
-fprintf(fid,'ET0=%f(%.3f)\tET1=%f(%.3f)\tET2=%f(%.3f)\n',TE0,TE0/TP,TE1,TE1/TP,TE2,TE2/TP);
-fprintf(fid,'P-Q-ET=%f\n',TP-TQ-TE);
+duration = te/365;
+fprintf(fid,'Number of days=%f [day]\n',te);
+fprintf(fid,'Number of years=%f [year]\n',duration);
+
+fprintf(fid,'Delta Storage\n');
+fprintf(fid,'DS=%f [m]\n',DS);
+fprintf(fid,'DS=%f [m per year]\n',DS/duration);
+
+fprintf(fid,'Precipitation\n');
+fprintf(fid,'P=%f [m entire duration]\n',TP);
+fprintf(fid,'P=%f [m per year]\n',TP/duration);
+fprintf(fid,'P=%f [m per day]\n',TP/te);
+
+fprintf(fid,'Discharge\n');
+fprintf(fid,'Q=%f [m]\n',TQ);
+fprintf(fid,'Q=%f [m per year]\n',(TQ/duration));
+
+fprintf(fid,'Discharge/Precipitation\n');
+fprintf(fid,'Q/P= %f [m]\n',TQ/TP);
+fprintf(fid,'Q/P= %f [m per year]\n',((TQ/duration)/(TP/duration)));
+
+fprintf(fid,'Combined Evaporation\n');
+fprintf(fid,'ET=%f [m]\n',TE);
+fprintf(fid,'ET=%f [m per year]\n',(TE/duration));
+fprintf(fid,'Combined Evaporation/Precipitation\n');
+fprintf(fid,'ET/P= %f [m]\n',TE/TP);
+fprintf(fid,'ET/P= %f [m per year]\n',((TE/duration)/(TP/duration)));
+
+fprintf(fid,'Evaporation from Canopy\n');
+fprintf(fid,'ET0=%f [m]\n',TE0);
+fprintf(fid,'ET0=%f [m per year]\n',(TE0/duration));
+fprintf(fid,'Evaporation from Canopy/Precipitation\n');
+fprintf(fid,'ET0/P= %f [m]\n',TE0/TP);
+fprintf(fid,'ET0/P= %f [m per year]\n',((TE0/duration)/(TP/duration)));
+
+fprintf(fid,'Transpiration\n');
+fprintf(fid,'ET1=%f [m]\n',TE1);
+fprintf(fid,'ET1=%f [m per year]\n',(TE1/duration));
+fprintf(fid,'Transpiration/Precipitation\n');
+fprintf(fid,'ET1/P= %f [m]\n',TE1/TP);
+fprintf(fid,'ET1/P= %f [m per year]\n',((TE1/duration)/(TP/duration)));
+
+fprintf(fid,'Evaporation from Ground Surface\n');
+fprintf(fid,'ET2=%f [m]\n',TE2);
+fprintf(fid,'ET2=%f [m per year]\n',(TE2/duration));
+fprintf(fid,'Evaporation from Ground Surface/Precipitation\n');
+fprintf(fid,'ET2/P= %f [m]\n',TE2/TP);
+fprintf(fid,'ET2/P= %f [m per year]\n',((TE2/duration)/(TP/duration)));
+
+
+%fprintf(fid,'ET0=%f(%.3f) [m]\tET1=%f(%.3f) [m]\tET2=%f(%.3f)\n',TE0,TE0/TP,TE1,TE1/TP,TE2,TE2/TP);
+%fprintf(fid,'ET0=%f(%.3f) [m per year]\tET1=%f(%.3f) [m per year]\tET2=%f(%.3f) [m per year]\n',(TE0/duration),(TE0/duration)/(TP/duration),(TE1/duration),(TE1/duration)/(TP/duration),(TE2/duration),(TE2/duration)/(TP/duration));
+
+fprintf(fid,'Balance of whole watershed\n');
+fprintf(fid,'P-Q-ET=%f [m]\n',TP-TQ-TE);
+fprintf(fid,'P-Q-ET=%f [m] [m per year]\n',(TP-TQ-TE)/duration);
+
+fprintf(fid,'***************************************************************************************.\n');
+fprintf(fid,'Model Properties\n');
+fprintf(fid,'Area=%f [m^2]\n',area);
+fprintf(fid,'Numer of grids:\t%d\n',length(iarea));
+fprintf(fid,'Number of points:\t%d\n',size(pt,1));
+
+m1=max(iarea);i1=find(iarea==m1);
+m0=min(iarea);i0=find(iarea==m0);
+m=mean(iarea); s=std(iarea);
+a=(iarea-mean(iarea))./mean(iarea);
+mm=mean(a);ss=std(a);
+fprintf(fid,'Max=%f \t\t At i= %d \n',m1,i1);
+fprintf(fid,'Min=%f \t\t At i= %d \n',m0,i0);
+fprintf(fid,'Mean=%f \t\t Std=%f \n', m,s);
+fprintf(fid,'Mean(normalized)=%f \t\t Std(normalized)=%f \n', mm,ss);
 
 fclose(fid);
 %============================================
@@ -517,7 +584,8 @@ end
 
 
 %============================================
-if exist(discharge_cubic_feet_per_sec, 'file')
+if length(usgs_gage_filename) > 0 
+%if exist(discharge_cubic_feet_per_sec, 'file')
     %Load USGS observed data, NOTE DATA MUST BE DAILY
     fileID = fopen(discharge_cubic_feet_per_sec,'r');
     formatSpec = '%*s %*s %*s %d %*s';
