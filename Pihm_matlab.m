@@ -293,38 +293,38 @@ if global_figures == 1
     subplot(2,1,1);
     idstg=(iis+isnow+isurf+iunsat+igw);%./iarea;
     plot(idstg);
-    title('\Delta S of each grid');
+    title('\Delta Storage [m] of each grid');
     subplot(2,1,2);
     idpq=ip-(iqsurf+iqsub+iet0+iet1+iet2)./iarea;
     plot(idpq);
     
-    title('P-Q-ET of each grid');
+    title('P-Q-ET [m] of each grid');
     figure(1)
-    mmaps(idstg,'Delta S',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
+    mmaps(idstg,'Delta Storage [m] ',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
     figure(2)
-    mmaps(idpq,'P-Q-ET',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
+    mmaps(idpq,'P-Q-ET [m] ',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
     figure(3)
-    mmaps(iqsurf,'Q surf accumulated',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
+    mmaps(iqsurf,'Q surf accumulated [m] ',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
     figure(4)
-    mmaps(iqsub,'Q_gw',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
+    mmaps(iqsub,'QGroundwater [m] ',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
     figure(5)
-    mmaps(sum(RECH(ts:te,2:N+1))/area,'Recharge',ts,te, mesh_file,global_figures,  matlab_output,project_name,append_time_stamps);
+    mmaps(sum(RECH(ts:te,2:N+1))/area,'Recharge [m] ',ts,te, mesh_file,global_figures,  matlab_output,project_name,append_time_stamps);
 elseif global_figures == 2
     subplot(2,1,1);
     idstg=(iis+isnow+isurf+iunsat+igw);%./iarea;
     plot(idstg);
-    title('\Delta S of each grid');
+    title('\Delta Storage [m]  of each grid');
     subplot(2,1,2);
     idpq=ip-(iqsurf+iqsub+iet0+iet1+iet2)./iarea;
     plot(idpq);
     fname = strcat(matlab_output,'\\',project_name,'_StorageByCell.png');
     print('-dpng',fname);
     
-    mmaps(idstg,'Delta S',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
-    mmaps(idpq,'P-Q-ET',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
-    mmaps(iqsurf,'Q surf accumulated',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
-    mmaps(iqsub,'Q_gw',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
-    mmaps(sum(RECH(ts:te,2:N+1))/area,'Recharge',ts,te, mesh_file,global_figures,  matlab_output,project_name,append_time_stamps);
+    mmaps(idstg,'Delta Storage [m] ',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
+    mmaps(idpq,'P-Q-ET [m] ',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
+    mmaps(iqsurf,'Q surf accumulated [m] ',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
+    mmaps(iqsub,'Q Groundwater [m] ',ts,te, mesh_file, global_figures, matlab_output,project_name,append_time_stamps);
+    mmaps(sum(RECH(ts:te,2:N+1))/area,'Recharge [m] ',ts,te, mesh_file,global_figures,  matlab_output,project_name,append_time_stamps);
 end
 
 %============================================
